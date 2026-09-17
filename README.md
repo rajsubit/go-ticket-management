@@ -211,7 +211,7 @@ Middleware wraps HTTP handlers in a clean pipeline:
 Go includes a built-in test runner via the `go test` command.
 
 ### Table-Driven Unit Tests
-Look at [internal/ticket/service_test.go](file:///Users/subit-pokharel/Desktop/projects/ticket-management/internal/ticket/service_test.go):
+Look at [internal/ticket/service_test.go](internal/ticket/service_test.go):
 
 ```go
 testCases := []struct {
@@ -233,7 +233,7 @@ for _, tc := range testCases {
 This is the gold standard of testing in Go: one loop, multiple test cases, isolated subtest output.
 
 ### HTTP Testing with `httptest`
-Look at [internal/ticket/handler_test.go](file:///Users/subit-pokharel/Desktop/projects/ticket-management/internal/ticket/handler_test.go):
+Look at [internal/ticket/handler_test.go](internal/ticket/handler_test.go):
 - `httptest.NewRequest(...)`: Simulates an HTTP request in memory.
 - `httptest.NewRecorder(...)`: Records the status code and response body without needing an active TCP port or network connection.
 
@@ -329,10 +329,10 @@ Response:
 
 > [!TIP]
 > ### 🔌 Using the REST Client Extension
-> We have pre-configured workspace recommendations in [.vscode/extensions.json](file:///Users/subit-pokharel/Desktop/projects/ticket-management/.vscode/extensions.json).
+> We have pre-configured workspace recommendations in [.vscode/extensions.json](.vscode/extensions.json).
 > 1. Open the Extensions sidebar (`Cmd + Shift + X` on Mac).
 > 2. Search for **REST Client** (by *Huachao Mao*, ID: `humao.rest-client`) and click **Install**.
-> 3. Open [api.http](file:///Users/subit-pokharel/Desktop/projects/ticket-management/api.http).
+> 3. Open [api.http](api.http).
 > 4. You will see a clickable **"Send Request"** button above every endpoint!
 > 5. When you click "Send Request" on request `#5 Create a New Ticket`, it automatically extracts the new ticket ID (`@ticketId`) so that all subsequent requests (Get, Update, Status Transition, Delete) run seamlessly without manual copying!
 
