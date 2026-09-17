@@ -1,17 +1,5 @@
-// Package ticket_test contains unit tests for the ticket package.
-//
-// LEARNING GO: Idiomatic Testing & Table-Driven Tests
-// 1. Package Naming:
-//    - Using `package ticket_test` (black-box testing) tests the package only through its public API,
-//      just like an external caller would.
-// 2. The `testing.T` type:
-//    - `t.Fatalf(...)`: Logs the failure and STOPS this test immediately.
-//    - `t.Errorf(...)`: Logs the failure but continues executing remaining assertions.
-//    - `t.Run(name, func(t *testing.T))`: Creates an isolated subtest with its own pass/fail status.
-// 3. Table-Driven Tests (The Go Standard):
-//    - Slices of anonymous structs holding test cases (`testCases := []struct{...}{...}`).
-//    - Eliminates copy-paste code and makes adding new edge cases trivial.
-package ticket_test
+// Package tests contains all test suites organized in a single folder for easy access.
+package tests
 
 import (
 	"errors"
@@ -73,7 +61,7 @@ func TestCreateTicket(t *testing.T) {
 			name: "Fails with invalid priority",
 			req: ticket.CreateTicketRequest{
 				Title:    "Legitimate title",
-				Priority: ticket.Priority("SUPER_URGENT"), // Not a valid domain priority
+				Priority: ticket.Priority("SUPER_URGENT"),
 			},
 			expectError: true,
 			expectedErr: platformErrors.ErrInvalidInput,
@@ -116,7 +104,6 @@ func TestStatusTransitions(t *testing.T) {
 	repo := ticket.NewInMemoryRepository()
 	svc := ticket.NewService(repo)
 
-	// Setup: Create a base ticket in OPEN status
 	created, err := svc.Create(ticket.CreateTicketRequest{
 		Title:    "Database performance tuning",
 		Priority: ticket.PriorityHigh,
@@ -143,7 +130,7 @@ func TestStatusTransitions(t *testing.T) {
 		t.Errorf("expected status %s, got %s", ticket.StatusResolved, updated.Status)
 	}
 
-	// 3. RESOLVED -> OPEN (Disallowed: must go to IN_PROGRESS or CLOSED)
+	// 3. RESOLVED -> OPEN (Disallowed)
 	_, err = svc.UpdateStatus(created.ID, ticket.StatusOpen)
 	if err == nil {
 		t.Fatalf("expected illegal transition from RESOLVED to OPEN to fail, but it succeeded")
@@ -184,7 +171,6 @@ func TestGetByIDAndNotFound(t *testing.T) {
 		t.Fatalf("failed to create ticket: %v", err)
 	}
 
-	// Successful retrieval
 	found, err := svc.GetByID(created.ID)
 	if err != nil {
 		t.Fatalf("expected to find ticket %s, got error: %v", created.ID, err)
@@ -193,7 +179,6 @@ func TestGetByIDAndNotFound(t *testing.T) {
 		t.Errorf("expected id %s, got %s", created.ID, found.ID)
 	}
 
-	// Non-existent ID retrieval
 	_, err = svc.GetByID("non-existent-id-999")
 	if err == nil {
 		t.Fatalf("expected error for non-existent ticket, got nil")
@@ -208,7 +193,6 @@ func TestMetricsCalculation(t *testing.T) {
 	repo := ticket.NewInMemoryRepository()
 	svc := ticket.NewService(repo)
 
-	// Create 3 tickets: 1 will stay OPEN, 1 will become IN_PROGRESS, 1 will become RESOLVED
 	t1, _ := svc.Create(ticket.CreateTicketRequest{Title: "Task 1", Priority: ticket.PriorityLow})
 	t2, _ := svc.Create(ticket.CreateTicketRequest{Title: "Task 2", Priority: ticket.PriorityMedium})
 	_, _ = svc.Create(ticket.CreateTicketRequest{Title: "Task 3", Priority: ticket.PriorityHigh})

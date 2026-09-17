@@ -1,14 +1,5 @@
-// Package ticket_test contains tests for HTTP handlers.
-//
-// LEARNING GO: HTTP Handler Testing with `net/http/httptest`
-// 1. `httptest.ResponseRecorder`:
-//    - An in-memory implementation of `http.ResponseWriter`.
-//    - It records the status code, headers, and body that the handler wrote.
-// 2. `httptest.NewRequest`:
-//    - Constructs an `*http.Request` without needing a real TCP connection.
-// 3. Fast and Deterministic:
-//    - Because no real network socket is opened, tests execute in milliseconds.
-package ticket_test
+// Package tests contains all test suites organized in a single folder for easy access.
+package tests
 
 import (
 	"bytes"

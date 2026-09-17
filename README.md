@@ -46,28 +46,39 @@ ticket-management/
 ├── go.mod                     # Module definition & dependency tracker
 ├── Makefile                   # Handy developer shortcuts (make run, test, build, demo)
 ├── api.http                   # Executable HTTP requests for IDE REST clients
-├── .gitignore                 # Excludes binaries and test artifacts
+├── .gitignore                 # Excludes binaries, test artifacts, and .env secrets
+├── .env.example               # Template environment configuration file
+├── migrations/                # Database DDL migration scripts
+│   └── 000001_create_tickets_table.sql
 ├── bin/                       # Output directory for compiled binaries
 │   └── server
 ├── cmd/                       # Application entrypoints
 │   └── server/
 │       └── main.go            # `package main`: Wires dependencies and boots server
-└── internal/                  # Private application code (enforced by Go compiler)
-    ├── platform/              # Cross-cutting utilities shared across domain packages
-    │   ├── errors/
-    │   │   └── errors.go      # Domain sentinel error definitions
-    │   └── response/
-    │       └── response.go    # Consistent JSON API response helpers
-    ├── ticket/                # The Ticket domain package
-    │   ├── model.go           # Domain structs, custom enum types, validation
-    │   ├── repository.go      # Storage interface & thread-safe in-memory store
-    │   ├── service.go         # Core business logic & state machine transitions
-    │   ├── service_test.go    # Table-driven unit tests
-    │   ├── handler.go         # HTTP handlers (REST API endpoints)
-    │   └── handler_test.go    # HTTP integration tests using net/http/httptest
-    └── server/
-        ├── router.go          # HTTP routes & middleware (Logger, Panic Recovery, CORS)
-        └── server.go          # Server configuration & graceful OS signal shutdown
+├── internal/                  # Private application code (enforced by Go compiler)
+│   ├── platform/              # Cross-cutting utilities shared across domain packages
+│   │   ├── config/
+│   │   │   └── config.go      # Loads environment variables & .env secrets securely
+│   │   ├── database/
+│   │   │   └── postgres.go    # PostgreSQL connection pool & schema auto-migrator
+│   │   ├── errors/
+│   │   │   └── errors.go      # Domain sentinel error definitions
+│   │   └── response/
+│   │       └── response.go    # Consistent JSON API response helpers
+│   ├── ticket/                # The Ticket domain package
+│   │   ├── model.go           # Domain structs, custom enum types, validation
+│   │   ├── repository.go      # Storage interface & thread-safe in-memory store
+│   │   ├── postgres_repository.go # PostgreSQL persistent storage implementation
+│   │   ├── service.go         # Core business logic & state machine transitions
+│   │   └── handler.go         # HTTP handlers (REST API endpoints)
+│   └── server/
+│       ├── router.go          # HTTP routes & middleware (Logger, Panic Recovery, CORS)
+│       └── server.go          # Server configuration & graceful OS signal shutdown
+└── tests/                     # All application test suites organized in a single folder
+    ├── config_test.go         # Environment & .env parser unit tests
+    ├── service_test.go        # Domain business logic & state machine tests
+    ├── handler_test.go        # REST API HTTP endpoint integration tests (httptest)
+    └── postgres_test.go       # PostgreSQL database CRUD & metrics integration tests
 ```
 
 ### Why `cmd/` and `internal/`?
@@ -211,7 +222,7 @@ Middleware wraps HTTP handlers in a clean pipeline:
 Go includes a built-in test runner via the `go test` command.
 
 ### Table-Driven Unit Tests
-Look at [internal/ticket/service_test.go](internal/ticket/service_test.go):
+Look at [tests/service_test.go](tests/service_test.go):
 
 ```go
 testCases := []struct {
@@ -233,9 +244,15 @@ for _, tc := range testCases {
 This is the gold standard of testing in Go: one loop, multiple test cases, isolated subtest output.
 
 ### HTTP Testing with `httptest`
-Look at [internal/ticket/handler_test.go](internal/ticket/handler_test.go):
+Look at [tests/handler_test.go](tests/handler_test.go):
 - `httptest.NewRequest(...)`: Simulates an HTTP request in memory.
 - `httptest.NewRecorder(...)`: Records the status code and response body without needing an active TCP port or network connection.
+
+### PostgreSQL Integration Testing
+Look at [tests/postgres_test.go](tests/postgres_test.go):
+- Tests end-to-end CRUD persistence directly against PostgreSQL.
+- Uses `t.Cleanup()` to safely remove test records.
+- Automatically skips if PostgreSQL is unreachable using `t.Skip()`.
 
 ### The Data Race Detector
 Go has an extraordinary compiler flag: `-race`.
