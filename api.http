@@ -1,0 +1,121 @@
+# ==============================================================================
+# REST Client Test File for Ticket Management API
+# Extension: "REST Client" by Huachao Mao (humao.rest-client)
+# Usage:
+#   1. Click "Send Request" directly above any endpoint below.
+#   2. The request response will appear in a side-by-side panel.
+#   3. You can execute "Create a New Ticket" first, and subsequent requests
+#      will automatically reuse the captured @ticketId!
+# ==============================================================================
+
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+### 1. Health Check
+GET {{baseUrl}}/healthz
+
+###
+
+### 2. List All Tickets
+GET {{baseUrl}}/api/v1/tickets
+
+###
+
+### 3. List Tickets Filtered by Status (OPEN)
+GET {{baseUrl}}/api/v1/tickets?status=OPEN
+
+###
+
+### 4. List Tickets Filtered by Priority (HIGH)
+GET {{baseUrl}}/api/v1/tickets?priority=HIGH
+
+###
+
+### 5. Create a New Ticket (Captures ID for subsequent requests)
+# @name createTicket
+POST {{baseUrl}}/api/v1/tickets
+Content-Type: {{contentType}}
+
+{
+  "title": "Setup OAuth2 Login with PKCE",
+  "description": "Allow users to authenticate using Google or GitHub securely",
+  "priority": "HIGH",
+  "assignee": "Subit"
+}
+
+###
+
+# Dynamically extract ticket ID from the createTicket response above!
+@ticketId = {{createTicket.response.body.data.id}}
+
+### 6. Get Created Ticket by Captured ID
+GET {{baseUrl}}/api/v1/tickets/{{ticketId}}
+
+###
+
+### 7. Update Ticket Details
+PUT {{baseUrl}}/api/v1/tickets/{{ticketId}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Setup OAuth2 Login with PKCE & Refresh Tokens",
+  "priority": "CRITICAL"
+}
+
+###
+
+### 8. Update Ticket Status (OPEN -> IN_PROGRESS)
+PATCH {{baseUrl}}/api/v1/tickets/{{ticketId}}/status
+Content-Type: {{contentType}}
+
+{
+  "status": "IN_PROGRESS"
+}
+
+###
+
+### 9. Update Ticket Status (IN_PROGRESS -> RESOLVED)
+PATCH {{baseUrl}}/api/v1/tickets/{{ticketId}}/status
+Content-Type: {{contentType}}
+
+{
+  "status": "RESOLVED"
+}
+
+###
+
+### 10. Attempt Illegal Transition (RESOLVED -> OPEN is forbidden by state machine)
+# Expected: HTTP 409 Conflict with error message
+PATCH {{baseUrl}}/api/v1/tickets/{{ticketId}}/status
+Content-Type: {{contentType}}
+
+{
+  "status": "OPEN"
+}
+
+###
+
+### 11. Validation Error Demo (Title < 3 chars fails validation)
+# Expected: HTTP 400 Bad Request
+POST {{baseUrl}}/api/v1/tickets
+Content-Type: {{contentType}}
+
+{
+  "title": "ab",
+  "priority": "HIGH"
+}
+
+###
+
+### 12. Delete the Created Ticket
+DELETE {{baseUrl}}/api/v1/tickets/{{ticketId}}
+
+###
+
+### 13. Verify Ticket is Deleted (Expected: HTTP 404 Not Found)
+GET {{baseUrl}}/api/v1/tickets/{{ticketId}}
+
+###
+
+### 14. Get Ticket Metrics & Statistics
+GET {{baseUrl}}/api/v1/tickets/metrics
