@@ -31,6 +31,7 @@ import (
 
 // Config encapsulates parameters required to establish a PostgreSQL connection pool.
 type Config struct {
+	URL             string // Full unified connection string (e.g. Render/Railway DATABASE_URL)
 	Host            string
 	Port            string
 	User            string
@@ -60,6 +61,10 @@ func DefaultConfig() Config {
 
 // DSN (Data Source Name) constructs the standard PostgreSQL connection URI.
 func (c Config) DSN() string {
+	if c.URL != "" {
+		return c.URL
+	}
+
 	var userPass string
 	if c.Password != "" {
 		userPass = fmt.Sprintf("%s:%s@", url.QueryEscape(c.User), url.QueryEscape(c.Password))
@@ -91,8 +96,8 @@ func Connect(cfg Config) (*sql.DB, error) {
 	db.SetMaxIdleConns(cfg.MaxIdleConns)
 	db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
 
-	// Verify database is accessible with a 5-second timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Verify database is accessible with a 10-second timeout (accommodates cloud cold starts)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := db.PingContext(ctx); err != nil {
@@ -101,8 +106,13 @@ func Connect(cfg Config) (*sql.DB, error) {
 			cfg.Host, cfg.Port, cfg.User, cfg.DBName, err)
 	}
 
-	log.Printf("[DATABASE] Connected to PostgreSQL (%s:%s/%s as %s)",
-		cfg.Host, cfg.Port, cfg.DBName, cfg.User)
+	// Safely log connection details with redacted password
+	if parsedURL, err := url.Parse(dsn); err == nil {
+		log.Printf("[DATABASE] Connected to PostgreSQL (%s)", parsedURL.Redacted())
+	} else {
+		log.Printf("[DATABASE] Connected to PostgreSQL (%s:%s/%s as user %s)",
+			cfg.Host, cfg.Port, cfg.DBName, cfg.User)
+	}
 
 	return db, nil
 }

@@ -50,6 +50,7 @@ func main() {
 	} else {
 		// Map DB settings from config
 		dbCfg := database.Config{
+			URL:             appCfg.DB.URL,
 			Host:            appCfg.DB.Host,
 			Port:            appCfg.DB.Port,
 			User:            appCfg.DB.User,

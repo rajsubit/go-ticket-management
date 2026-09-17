@@ -64,6 +64,31 @@ func TestConfigLoadFromEnvironment(t *testing.T) {
 	}
 }
 
+func TestConfigLoadFromDatabaseURL(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://render_user:render_pass@dpg-xxx.oregon-postgres.render.com:5432/render_db?sslmode=require")
+
+	cfg := config.Load()
+
+	if cfg.DB.User != "render_user" {
+		t.Errorf("expected DB user render_user, got %s", cfg.DB.User)
+	}
+	if cfg.DB.Password != "render_pass" {
+		t.Errorf("expected DB password render_pass, got %s", cfg.DB.Password)
+	}
+	if cfg.DB.Host != "dpg-xxx.oregon-postgres.render.com" {
+		t.Errorf("expected DB host dpg-xxx.oregon-postgres.render.com, got %s", cfg.DB.Host)
+	}
+	if cfg.DB.DBName != "render_db" {
+		t.Errorf("expected DB name render_db, got %s", cfg.DB.DBName)
+	}
+	if cfg.DB.SSLMode != "require" {
+		t.Errorf("expected SSL mode require, got %s", cfg.DB.SSLMode)
+	}
+	if cfg.DB.URL == "" {
+		t.Errorf("expected DB URL to be preserved, got empty")
+	}
+}
+
 func TestDotEnvFileParsing(t *testing.T) {
 	tmpDir := t.TempDir()
 	envPath := filepath.Join(tmpDir, ".env")
