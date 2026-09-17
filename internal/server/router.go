@@ -17,6 +17,7 @@ package server
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"ticket-management/internal/platform/response"
@@ -95,6 +96,17 @@ func NewRouter(ticketHandler *ticket.Handler) http.Handler {
 
 	// Register ticket domain routes
 	ticketHandler.RegisterRoutes(mux)
+
+	// Static web frontend files (served from web/ or ../web)
+	webDir := "web"
+	if _, err := os.Stat(webDir); err != nil {
+		if _, err := os.Stat("../web"); err == nil {
+			webDir = "../web"
+		}
+	}
+	if _, err := os.Stat(webDir); err == nil {
+		mux.Handle("GET /", http.FileServer(http.Dir(webDir)))
+	}
 
 	// Apply middleware stack (innermost executes last):
 	// Request -> Recovery -> CORS -> Logger -> ServeMux
